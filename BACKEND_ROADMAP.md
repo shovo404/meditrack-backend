@@ -2,8 +2,8 @@
 
 This document defines the structured development phases for the Laravel Backend.
 
-1. **Backend foundation**
-2. **Authentication**
+1. **Backend foundation** (COMPLETE)
+2. **Authentication + User/Admin Foundation** (COMPLETE)
 3. **Admin authentication**
 4. **Medicine catalog**
 5. **Medicine image storage**

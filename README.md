@@ -68,4 +68,47 @@ Currently in **Phase 2: Authentication + User/Admin Foundation**.
   - `GET /api/v1/catalog/medicines` (Paginated, Searchable, only returns active and non-deleted medicines)
 - **Search capabilities**: Both index endpoints allow `?search=query` to search by name, generic name, or manufacturer.
 - **Pagination**: Supports `?per_page=N` (defaults to 20, max 100).
-- **Image URL**: Stored as a simple URL string for now.
+- **Image URL**: Members of the catalog are returned with an `imageUrl` field. When an image exists it is the usable public URL; when no image exists it is `null`.
+
+## Phase 4: Medicine Catalog Image Upload & Storage
+### Image Upload Endpoints (Admin only — `auth:sanctum` + `admin` middleware)
+- `POST /api/v1/admin/catalog/medicines` — Create a medicine. Accepts `multipart/form-data` with an optional `image` file plus: `name`, `generic_name`, `strength`, `dosage_form`, `manufacturer`, `is_active`. The image is optional and a medicine without an image is valid.
+- `PUT|PATCH /api/v1/admin/catalog/medicines/{id}` — Update a medicine. Supports:
+  - Replacing the image: send a new `image` file.
+  - Keeping the existing image: omit `image` entirely.
+  - Removing the image: send `remove_image=true`.
+  - `remove_image` and `image` cannot be sent together (422).
+- `PATCH /api/v1/admin/catalog/medicines/{id}/image` — Admin-only way to remove the image from a medicine without deleting it. Send `{"remove_image": true}`.
+
+### Accepted Formats
+- JPG / JPEG
+- PNG
+- WEBP
+
+SVG is rejected. Files are validated by content/MIME type via Laravel validation (`image`, `mimes:jpg,jpeg,png,webp`) and the client-provided filename is never trusted as a storage filename.
+
+### Maximum File Size
+- **5 MB** (`max:5120` in kilobytes).
+
+### Storage Location
+- Images are stored on the `public` disk (default `local` driver) in the dedicated directory:
+  - `storage/app/public/catalog-medicines/`
+- Each file receives a generated unique filename; the original user-provided filename is not used.
+- The database `catalog_medicines.image_url` column stores the internal storage path. The API never exposes the internal path directly.
+
+### Image URL Behavior
+- `CatalogMedicineResource` returns `imageUrl`:
+  - Present image → usable public URL (`{APP_URL}/storage/catalog-medicines/<file>`).
+  - No image → `imageUrl` is `null`.
+- Legacy data containing an absolute URL in `image_url` is returned as-is for backward compatibility.
+
+### Local Storage Setup
+```bash
+php artisan storage:link
+```
+This creates the `public/storage` symlink pointing to `storage/app/public` so images are publicly reachable. Required once after setup. For local development the disk is configured via `FILESYSTEM_DISK=local` with the `public` disk in `config/filesystems.php`.
+
+### Future Cloud-Storage Migration Considerations
+- All storage access is isolated behind two points: the controller helpers (`storeImage` / `deleteImage`) which write to the `public` disk, and the `CatalogMedicineResource` which generates the public URL.
+- To migrate to S3/cloud storage: configure an S3 disk in `config/filesystems.php`, switch `FILESYSTEM_DISK` (or the disk used for catalog images), and ensure the disk exposes a public URL. The resource already resolves `imageUrl` through `Storage::disk('public')->url(...)`, so no API contract change is needed.
+- For these three formats (JPG, PNG, WEBP) no image-processing or OCR/AI dependency is used.

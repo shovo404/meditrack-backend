@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CatalogMedicine;
-use Illuminate\Http\Request;
-use App\Http\Resources\CatalogMedicineResource;
+use App\Http\Requests\ChangeCatalogMedicineStatusRequest;
+use App\Http\Requests\RemoveCatalogMedicineImageRequest;
 use App\Http\Requests\StoreCatalogMedicineRequest;
 use App\Http\Requests\UpdateCatalogMedicineRequest;
-use App\Http\Requests\ChangeCatalogMedicineStatusRequest;
+use App\Http\Resources\CatalogMedicineResource;
+use App\Models\CatalogMedicine;
+use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class AdminCatalogMedicineController extends Controller
 {
+    public const IMAGE_DIRECTORY = 'catalog-medicines';
+
     public function index(Request $request)
     {
         $query = CatalogMedicine::query();
@@ -30,11 +35,18 @@ class AdminCatalogMedicineController extends Controller
 
     public function store(StoreCatalogMedicineRequest $request)
     {
-        $medicine = CatalogMedicine::create($request->validated());
+        $data = $request->validated();
+        unset($data['image']);
+
+        if ($request->hasFile('image')) {
+            $data['image_url'] = $this->storeImage($request->file('image'));
+        }
+
+        $medicine = CatalogMedicine::create($data);
 
         return response()->json([
             'message' => 'Medicine created successfully.',
-            'data' => new CatalogMedicineResource($medicine)
+            'data' => new CatalogMedicineResource($medicine),
         ], 201);
     }
 
@@ -45,11 +57,42 @@ class AdminCatalogMedicineController extends Controller
 
     public function update(UpdateCatalogMedicineRequest $request, CatalogMedicine $medicine)
     {
-        $medicine->update($request->validated());
+        $data = $request->validated();
+        unset($data['image'], $data['remove_image']);
+
+        $replacing = $request->hasFile('image');
+        $removing = $request->boolean('remove_image');
+
+        if ($replacing) {
+            $data['image_url'] = $this->storeImage($request->file('image'));
+        } elseif ($removing) {
+            $data['image_url'] = null;
+        }
+
+        $oldImagePath = $medicine->image_url;
+        $medicine->update($data);
+
+        if ($replacing || $removing) {
+            $this->deleteImage($oldImagePath);
+        }
 
         return response()->json([
             'message' => 'Medicine updated successfully.',
-            'data' => new CatalogMedicineResource($medicine)
+            'data' => new CatalogMedicineResource($medicine),
+        ]);
+    }
+
+    public function removeImage(RemoveCatalogMedicineImageRequest $request, CatalogMedicine $medicine)
+    {
+        $oldImagePath = $medicine->image_url;
+
+        $medicine->update(['image_url' => null]);
+
+        $this->deleteImage($oldImagePath);
+
+        return response()->json([
+            'message' => 'Medicine image removed successfully.',
+            'data' => new CatalogMedicineResource($medicine),
         ]);
     }
 
@@ -58,7 +101,7 @@ class AdminCatalogMedicineController extends Controller
         $medicine->delete();
 
         return response()->json([
-            'message' => 'Medicine deleted successfully.'
+            'message' => 'Medicine deleted successfully.',
         ]);
     }
 
@@ -70,7 +113,21 @@ class AdminCatalogMedicineController extends Controller
 
         return response()->json([
             'message' => 'Medicine status updated successfully.',
-            'data' => new CatalogMedicineResource($medicine)
+            'data' => new CatalogMedicineResource($medicine),
         ]);
+    }
+
+    private function storeImage(UploadedFile $image): string
+    {
+        return $image->store(self::IMAGE_DIRECTORY, 'public');
+    }
+
+    private function deleteImage(?string $imageUrl): void
+    {
+        if (! $imageUrl || filter_var($imageUrl, FILTER_VALIDATE_URL) !== false) {
+            return;
+        }
+
+        Storage::disk('public')->delete($imageUrl);
     }
 }

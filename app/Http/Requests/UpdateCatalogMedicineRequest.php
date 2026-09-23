@@ -19,6 +19,8 @@ class UpdateCatalogMedicineRequest extends FormRequest
             'strength' => 'nullable|string|max:100',
             'dosage_form' => 'nullable|string|max:100',
             'manufacturer' => 'nullable|string|max:255',
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_image' => 'boolean|prohibits:image',
             'image_url' => 'nullable|url|max:1024',
             'is_active' => 'boolean',
         ];

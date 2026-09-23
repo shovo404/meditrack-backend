@@ -14,7 +14,7 @@ class CatalogMedicineFactory extends Factory
             'strength' => $this->faker->randomElement(['500mg', '100mg', '250mg']),
             'dosage_form' => $this->faker->randomElement(['Tablet', 'Capsule', 'Syrup']),
             'manufacturer' => $this->faker->company(),
-            'image_url' => $this->faker->imageUrl(),
+            'image_url' => null,
             'is_active' => true,
         ];
     }

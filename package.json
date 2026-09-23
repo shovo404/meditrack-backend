@@ -4,16 +4,40 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "build:admin": "vite build --config vite.admin.config.js",
+        "dev": "vite",
+        "dev:admin": "vite --config vite.admin.config.js",
+        "test:admin": "vitest run --config vite.admin.config.js",
+        "typecheck:admin": "tsc --noEmit -p resources/admin/tsconfig.json"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
+        "@testing-library/jest-dom": "^7.0.1",
+        "@testing-library/react": "^16.3.3",
+        "@testing-library/user-event": "^14.6.7",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "@vitejs/plugin-react": "^6.1.1",
         "concurrently": "^10.0.3",
+        "jsdom": "^30.1.1",
         "laravel-vite-plugin": "^3.1",
         "tailwindcss": "^4.0.0",
-        "vite": "^8.0.0"
+        "typescript": "^7.0.2",
+        "vite": "^8.0.0",
+        "vitest": "^5.0.1"
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
+    },
+    "dependencies": {
+        "@headlessui/react": "^2.2.10",
+        "@hookform/resolvers": "^5.9.1",
+        "@tanstack/react-query": "^5.103.2",
+        "lucide-react": "^1.47.0",
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0",
+        "react-hook-form": "^7.88.0",
+        "react-router-dom": "^7.18.4",
+        "zod": "^4.6.5"
     }
 }

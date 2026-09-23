@@ -23,10 +23,14 @@ Sanctum's stateful (session cookie) mode; the Android app keeps using personal a
 - **Phase 2A — Admin backend foundation** (COMPLETE) — Sanctum stateful configuration, admin session
 auth endpoints, rate limiting, credentialed CORS, logout hardening, feature tests and docs.
 **No frontend work in this phase.**
-- **Phase 2B — Admin SPA frontend foundation** (NEXT) — Vite admin config, React + TypeScript +
-Tailwind app shell (sidebar/topbar/responsive), admin route guard, API client with CSRF handling,
-admin login page.
-- **Phase 2C — Catalog list UI** — responsive table, search, filters, pagination, status toggle,
+- **Phase 2B — Admin SPA frontend foundation** (COMPLETE) — `resources/admin` React 19 + TypeScript +
+Vite 8 + Tailwind 4 app; `vite.admin.config.js` (dev port 5174, `/api`/`/sanctum`/`/storage` proxy,
+build output `public/build-admin`); `GET /admin/{any?}` shell route; login page; session auth state +
+`RequireAdmin` guard; API client with CSRF bootstrap, `419` retry and typed errors; responsive
+sidebar/topbar shell with placeholder Dashboard/Catalog/Settings pages. 38 front-end tests, 80 PHP
+tests, production build, and real-Chrome browser verification (built bundle + Vite dev server).
+No catalog list/search/pagination, medicines forms, image upload UI or dashboard statistics yet.
+- **Phase 2C — Catalog list UI** (NEXT) — responsive table, search, filters, pagination, status toggle,
 delete confirmation, loading/empty/error states.
 - **Phase 2D — Catalog create/edit + images** — validated forms, image upload/replace/remove with
 client-side validation and previews.

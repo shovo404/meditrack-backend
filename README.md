@@ -48,13 +48,15 @@ php artisan test
 ```
 
 ## Implementation Status
-Currently in **Phase 2A: Admin Panel Backend Foundation** (the Admin SPA itself is not built yet).
+Currently in **Phase 2B: Admin SPA Frontend Foundation** — the React admin panel shell, login page and
+API client exist; the catalog UI, dashboard statistics and catalog forms do **not** yet.
 - Authentication architecture built using Laravel Sanctum: personal access tokens for Android, session cookies for the Admin SPA.
 - Roles system (`ADMIN` vs `USER`) implemented.
 - `MakeAdminCommand` established for development seeding.
 - Medicine catalog CRUD + image management (Admin) and read-only catalog API (User) implemented.
 - Admin SPA authentication endpoints, stateful Sanctum configuration, CSRF and login throttling in place.
-- Test suite successfully passing all bounds.
+- Admin SPA foundation (`resources/admin`) built with React 19 + TypeScript + Vite + Tailwind 4: admin login page, session auth state, admin route guard, responsive sidebar/topbar shell, and placeholder Dashboard/Catalog/Settings pages.
+- Test suite successfully passing all bounds (PHP: 80 tests; admin SPA: 38 tests).
 
 ## Phase 3: Admin Medicine Catalog Management
 - **Models**: `CatalogMedicine` implemented with soft deletes.
@@ -205,3 +207,91 @@ endpoint (`401`/`403`/`200`), session cookie round-trips, logout safety (no pers
 deletion), Android bearer compatibility, and continued protection of the catalog API.
 Laravel skips CSRF validation while running unit tests, so the `419` behaviour is verified through the
 configuration plus a manual HTTP check rather than by PHPUnit.
+
+## Phase 2B: Admin SPA Frontend Foundation
+
+The Admin Panel single-page application lives in `resources/admin` and is served by Laravel under
+**`/admin`**. Phase 2B delivers the application shell, the login screen and the client-side plumbing
+only — no catalog list, search, pagination, medicine forms, image upload UI or dashboard statistics.
+
+### Commands
+| Command | Purpose |
+|---|---|
+| `npm run dev:admin` | Vite dev server for the admin SPA on **`http://localhost:5174`** (HMR) |
+| `npm run build:admin` | Production build into `public/build-admin/` (git-ignored) |
+| `npm run test:admin` | Vitest suite for the admin SPA (jsdom) |
+| `npm run typecheck:admin` | `tsc --noEmit` for the admin SPA |
+
+The existing `npm run dev` / `npm run build` scripts and `vite.config.js` are untouched: the admin SPA
+has its own config (`vite.admin.config.js`), its own root (`resources/admin`) and its own build output.
+
+### URLs
+- **`/admin/login`** — the login screen (public, renders the form).
+- **`/admin`** — the verified Admin Dashboard shell (requires an authenticated admin).
+- **`/admin/catalog`**, **`/admin/settings`** — placeholders inside the shell.
+- **`/admin/*`** — any other path renders an in-shell 404 page.
+- **`/`** — redirects to `/admin`.
+
+### Laravel shell route
+The `admin.shell` route (`GET /admin/{any?}` → `resources/views/admin/app.blade.php`) returns HTML
+only: an empty `#admin-root` element plus the Vite tags. It never renders catalog or account data. The
+Blade view uses `@viteReactRefresh` + `@vite('main.tsx', 'build-admin')`, and the route sets
+`Vite::useHotFile(public_path('build-admin/hot'))` so that dev-server URLs are picked up for this route
+only — the marketing `welcome` view keeps using the default `public/hot` path.
+
+### Local development workflow
+1. `php artisan serve` (default `http://127.0.0.1:8000`) — serves the SPA shell **and** the API.
+2. `npm run dev:admin` — serves the React modules and HMR.
+3. Open **`http://127.0.0.1:8000/admin`**.
+
+The API is called same-origin (`/api/v1`), so the Sanctum session cookie is sent normally. Keep the host
+consistent (`localhost` *or* `127.0.0.1`) or the cookie will not be sent. Two footguns worth knowing:
+- Binding `php artisan serve --host=localhost` on macOS can listen on IPv6 `::1` only, while the Vite
+  proxy targets `http://127.0.0.1:8000`; that combination makes proxied requests fail with `502`.
+  Use the default host (`127.0.0.1`).
+- `laravel-vite-plugin` deliberately answers `/index.html` on the **dev server port** with a 404
+  "Laravel Vite" page, so the dev-server port serves assets only — open the app on `APP_URL`, not on
+  `:5174`. The dev proxy below is still configured for tooling that talks to the dev server directly.
+
+### Development proxy
+`vite.admin.config.js` proxies `/api`, `/sanctum` and `/storage` to `http://127.0.0.1:8000`, so the
+admin SPA runs on a single origin during development and no cross-origin credentialed request is ever
+needed. No production URL is hard-coded; the optional `VITE_ADMIN_API_BASE_URL` (see `.env.example`)
+overrides the API base path, which otherwise defaults to the same-origin `/api/v1`.
+
+### Sanctum session authentication & CSRF flow (front end)
+1. On startup the app calls `GET /api/v1/admin/auth/user` once (TanStack Query, `retry: false`):
+   `200` ⇒ authenticated admin, `401` ⇒ unauthenticated, `403` ⇒ signed-in non-admin.
+2. Signing in calls `GET /sanctum/csrf-cookie` first, reads the `XSRF-TOKEN` cookie (URL-decoded) and
+   echoes it as `X-XSRF-TOKEN` on the `POST /api/v1/admin/auth/login`.
+3. Every request uses `credentials: 'include'`; the browser owns the session cookie, which is
+   `httpOnly` and therefore unreadable from JavaScript.
+4. `419` responses trigger exactly one CSRF-cookie refresh and one retry.
+5. No access token is ever created, and nothing is written to `localStorage`/`sessionStorage`.
+6. `RequireAdmin` is UX only; `auth:sanctum` + `AdminMiddleware` on `/api/v1/admin/*` remain the
+   authorization boundary.
+
+### Admin SPA tests
+`npm run test:admin` runs 38 Vitest tests in jsdom covering the API transport (`lib/api/client.test.ts`:
+CSRF bootstrap, retry-once on `419`, all typed error states), the auth provider
+(`features/auth/AdminAuthProvider.test.tsx`), the route guard (`features/auth/RequireAdmin.test.tsx`) and
+the login form (`features/auth/LoginPage.test.tsx`: validation, field errors, 401/403/429/network/server
+messages, redirect safety).
+
+### Browser verification status (Phase 2B)
+Verified in **real Chrome** (headless, driven over the DevTools Protocol via a temporary script) against
+a temporary SQLite database seeded with one `ADMIN` and one `USER` account — **47 checks, all passing**:
+- **Built bundle, core flow (12 checks)** — `/admin/login` renders the form; admin login redirects to
+  `/admin` and the shell loads; `/api/v1/admin/auth/user` returns `200` in the browser; identity shown;
+  session survives a full page refresh; `/admin/catalog` placeholder renders; logout returns to
+  `/admin/login`; the session is `401` afterwards; visiting `/admin` while signed out redirects to the
+  login page; a `USER` login is denied with no admin content; no uncaught JS errors.
+- **Built bundle, supplementary (23 checks)** — Tailwind tokens actually applied (computed colours),
+  labelled/autofilled fields, password show/hide, client validation announced via `role="alert"`,
+  sidebar/topbar contents, `/admin/settings`, no `localStorage`/`sessionStorage` entries, session cookie
+  `httpOnly`, `XSRF-TOKEN` readable and sent as `X-XSRF-TOKEN` on the POST, no `Authorization` header on
+  any admin API call, 390 px layout hides the sidebar and opens the mobile drawer, Escape closes it, and
+  sign-out works from the keyboard.
+- **Vite dev server workflow (12 checks)** — the same core flow repeated against `php artisan serve` +
+  `npm run dev:admin`, confirming the hot-file path, the React Fast Refresh preamble and HMR-loaded
+  modules work end to end.

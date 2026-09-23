@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+
+/**
+ * MediTrack Admin design tokens.
+ *
+ * The whole admin surface is styled through these semantic tokens so a light/dark
+ * theme only ever needs to swap token values (see the `.dark` block below) — no
+ * component rewrites.
+ */
+@theme {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    /* Medical blue */
+    --color-brand-50: #eff6ff;
+    --color-brand-100: #dbeafe;
+    --color-brand-200: #bfdbfe;
+    --color-brand-300: #93c5fd;
+    --color-brand-400: #60a5fa;
+    --color-brand-500: #3b82f6;
+    --color-brand-600: #2563eb;
+    --color-brand-700: #1d4ed8;
+    --color-brand-800: #1e40af;
+    --color-brand-900: #1e3a8a;
+
+    /* Navy surfaces used by the brand panel and headings */
+    --color-navy-600: #1b3a5f;
+    --color-navy-700: #16304f;
+    --color-navy-800: #102542;
+    --color-navy-900: #0b1b33;
+
+    /* Semantic surface tokens (overridden in dark mode) */
+    --color-canvas: #f6f8fb;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f1f5f9;
+    --color-line: #e2e8f0;
+    --color-muted: #64748b;
+    --color-ink: #0f172a;
+
+    --radius-card: 0.875rem;
+}
+
+/* Class-based dark mode: adding `class="dark"` to <html> flips every token below. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+    --color-canvas: #0a111f;
+    --color-surface: #101a2b;
+    --color-surface-muted: #16233a;
+    --color-line: #1f2c42;
+    --color-muted: #94a3b8;
+    --color-ink: #e6edf7;
+}
+
+@layer base {
+    body {
+        background-color: var(--color-canvas);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Visible, consistent focus treatment for keyboard users. */
+    :focus-visible {
+        outline: 2px solid var(--color-brand-600);
+        outline-offset: 2px;
+    }
+}

@@ -125,6 +125,88 @@ class CatalogMedicineTest extends TestCase
         $this->assertEquals('Active Med', $data[0]['name']);
     }
 
+    public function test_user_catalog_endpoint_requires_authentication()
+    {
+        $response = $this->getJson('/api/v1/catalog/medicines');
+        $response->assertStatus(401);
+    }
+
+    public function test_user_catalog_endpoint_uses_stable_ordering_across_pages()
+    {
+        CatalogMedicine::factory()->count(25)->create(['is_active' => true]);
+
+        $page1 = $this->actingAs($this->getUser())->getJson('/api/v1/catalog/medicines?per_page=10&page=1')->json('data');
+        $page2 = $this->actingAs($this->getUser())->getJson('/api/v1/catalog/medicines?per_page=10&page=2')->json('data');
+        $page3 = $this->actingAs($this->getUser())->getJson('/api/v1/catalog/medicines?per_page=10&page=3')->json('data');
+
+        $this->assertCount(10, $page1);
+        $this->assertCount(10, $page2);
+        $this->assertCount(5, $page3);
+
+        $allIds = array_column(array_merge($page1, $page2, $page3), 'id');
+        $sortedIds = $allIds;
+        sort($sortedIds, SORT_NUMERIC);
+
+        $this->assertEquals(
+            $sortedIds,
+            $allIds,
+            'Concatenated pages are not in stable ascending id order.'
+        );
+        $this->assertSameSize(
+            array_unique($allIds),
+            $allIds,
+            'Pages contain duplicate/overlapping ids.'
+        );
+    }
+
+    public function test_user_catalog_endpoint_returns_correct_camelcase_data()
+    {
+        CatalogMedicine::factory()->create([
+            'name' => 'Paracetamol',
+            'generic_name' => 'Acetaminophen',
+            'strength' => '500mg',
+            'dosage_form' => 'Tablet',
+            'manufacturer' => 'PharmaX',
+            'image_url' => null,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->getUser())->getJson('/api/v1/catalog/medicines');
+        $response->assertStatus(200);
+
+        $item = $response->json('data.0');
+        $this->assertEquals('Paracetamol', $item['name']);
+        $this->assertEquals('Acetaminophen', $item['genericName']);
+        $this->assertEquals('500mg', $item['strength']);
+        $this->assertEquals('Tablet', $item['dosageForm']);
+        $this->assertEquals('PharmaX', $item['manufacturer']);
+        $this->assertNull($item['imageUrl']);
+        $this->assertTrue($item['isActive']);
+        $this->assertArrayHasKey('id', $item);
+        $this->assertArrayHasKey('createdAt', $item);
+        $this->assertArrayHasKey('updatedAt', $item);
+    }
+
+    public function test_user_catalog_endpoint_excludes_soft_deleted_medicines()
+    {
+        $medicine = CatalogMedicine::factory()->create(['is_active' => true]);
+        $medicine->delete();
+
+        $response = $this->actingAs($this->getUser())->getJson('/api/v1/catalog/medicines');
+        $response->assertStatus(200);
+        $this->assertCount(0, $response->json('data'));
+    }
+
+    public function test_user_catalog_endpoint_caps_per_page()
+    {
+        CatalogMedicine::factory()->count(120)->create(['is_active' => true]);
+
+        $response = $this->actingAs($this->getUser())->getJson('/api/v1/catalog/medicines?per_page=500');
+        $response->assertStatus(200);
+        $this->assertCount(100, $response->json('data'));
+        $this->assertEquals(2, $response->json('meta.last_page'));
+    }
+
     public function test_catalog_search_works()
     {
         CatalogMedicine::factory()->create(['name' => 'Paracetamol 500mg', 'manufacturer' => 'Pharma A']);

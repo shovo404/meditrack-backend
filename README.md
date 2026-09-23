@@ -42,17 +42,17 @@ This user will be granted the `ADMIN` role. Regular registrations via the API de
 - `GET /api/v1/admin/test` - Test endpoint requiring both Sanctum auth and Admin privileges.
 
 ## Running Tests
-Run the PHPUnit test suite to verify authentication boundaries:
+Run the PHPUnit test suite to verify authentication boundaries and the catalog API:
 ```bash
 php artisan test
 ```
 
 ## Implementation Status
-Currently in **Phase 2: Authentication + User/Admin Foundation**.
-- Laravel installed and database configured.
+Currently in **Phase 5: Backend ↔ Android Medicine Catalog Synchronization**.
 - Authentication architecture built using Laravel Sanctum.
 - Roles system (`ADMIN` vs `USER`) implemented.
 - `MakeAdminCommand` established for development seeding.
+- Medicine catalog CRUD + image management (Admin) and read-only catalog API (User) implemented.
 - Test suite successfully passing all bounds.
 
 ## Phase 3: Admin Medicine Catalog Management
@@ -112,3 +112,18 @@ This creates the `public/storage` symlink pointing to `storage/app/public` so im
 - All storage access is isolated behind two points: the controller helpers (`storeImage` / `deleteImage`) which write to the `public` disk, and the `CatalogMedicineResource` which generates the public URL.
 - To migrate to S3/cloud storage: configure an S3 disk in `config/filesystems.php`, switch `FILESYSTEM_DISK` (or the disk used for catalog images), and ensure the disk exposes a public URL. The resource already resolves `imageUrl` through `Storage::disk('public')->url(...)`, so no API contract change is needed.
 - For these three formats (JPG, PNG, WEBP) no image-processing or OCR/AI dependency is used.
+
+## Phase 5: User Catalog API for Android Synchronization
+The Android client synchronizes the global medicine catalog from this endpoint:
+
+- `GET /api/v1/catalog/medicines` (requires `auth:sanctum`).
+- Returns **only active, non-soft-deleted** catalog medicines.
+- Paginated via `?page=N`; default 20 per page, capped at 100 (`?per_page=`).
+- Ordered by `id` ascending — **stable ordering** suitable for multi-page synchronization.
+- Optional `?search=` by name/generic name/manufacturer (used standalone; the Android sync does not search).
+- Response shape (through `CatalogMedicineResource`): Laravel paginator `data` + `meta` (`current_page`, `last_page`, `total`); item fields are **camelCase**: `id`, `name`, `genericName`, `strength`, `dosageForm`, `manufacturer`, `imageUrl` (nullable), `isActive`, `createdAt`, `updatedAt` (ISO-8601 with offset).
+
+### Synchronization Contract (Android)
+- The Android app pages through every page sequentially until `last_page`.
+- A single successful full-pagination pass is applied to Room via transactional bulk upsert, then locally cached catalog rows missing from the server's active catalog are marked inactive (`deactivateMissing` — `catalog_medicines` table only).
+- If any page fails, the Android app performs **no** database writes and keeps the existing local catalog (offline-first); autocomplete remains local to Room.

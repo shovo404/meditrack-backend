@@ -54,3 +54,18 @@ Currently in **Phase 2: Authentication + User/Admin Foundation**.
 - Roles system (`ADMIN` vs `USER`) implemented.
 - `MakeAdminCommand` established for development seeding.
 - Test suite successfully passing all bounds.
+
+## Phase 3: Admin Medicine Catalog Management
+- **Models**: `CatalogMedicine` implemented with soft deletes.
+- **Admin Endpoints** (Requires `auth:sanctum` + `admin` middleware):
+  - `GET /api/v1/admin/catalog/medicines` (Paginated, Searchable)
+  - `POST /api/v1/admin/catalog/medicines` (Create)
+  - `GET /api/v1/admin/catalog/medicines/{id}` (View)
+  - `PUT /api/v1/admin/catalog/medicines/{id}` (Update)
+  - `DELETE /api/v1/admin/catalog/medicines/{id}` (Soft Delete)
+  - `PATCH /api/v1/admin/catalog/medicines/{id}/status` (Activate/Deactivate)
+- **User Endpoint** (Requires `auth:sanctum`):
+  - `GET /api/v1/catalog/medicines` (Paginated, Searchable, only returns active and non-deleted medicines)
+- **Search capabilities**: Both index endpoints allow `?search=query` to search by name, generic name, or manufacturer.
+- **Pagination**: Supports `?per_page=N` (defaults to 20, max 100).
+- **Image URL**: Stored as a simple URL string for now.

@@ -48,11 +48,12 @@ php artisan test
 ```
 
 ## Implementation Status
-Currently in **Phase 5: Backend ↔ Android Medicine Catalog Synchronization**.
-- Authentication architecture built using Laravel Sanctum.
+Currently in **Phase 2A: Admin Panel Backend Foundation** (the Admin SPA itself is not built yet).
+- Authentication architecture built using Laravel Sanctum: personal access tokens for Android, session cookies for the Admin SPA.
 - Roles system (`ADMIN` vs `USER`) implemented.
 - `MakeAdminCommand` established for development seeding.
 - Medicine catalog CRUD + image management (Admin) and read-only catalog API (User) implemented.
+- Admin SPA authentication endpoints, stateful Sanctum configuration, CSRF and login throttling in place.
 - Test suite successfully passing all bounds.
 
 ## Phase 3: Admin Medicine Catalog Management
@@ -127,3 +128,80 @@ The Android client synchronizes the global medicine catalog from this endpoint:
 - The Android app pages through every page sequentially until `last_page`.
 - A single successful full-pagination pass is applied to Room via transactional bulk upsert, then locally cached catalog rows missing from the server's active catalog are marked inactive (`deactivateMissing` — `catalog_medicines` table only).
 - If any page fails, the Android app performs **no** database writes and keeps the existing local catalog (offline-first); autocomplete remains local to Room.
+
+## Phase 2A: Admin Panel Backend Foundation (Admin SPA Authentication)
+
+The Admin Panel is a first-party SPA served by this application. It authenticates with Laravel
+Sanctum's **stateful (session cookie)** mode. The Android client keeps using bearer tokens. There is
+no React/SPA code yet — this phase prepares and secures the backend only.
+
+### Sanctum stateful configuration
+- `bootstrap/app.php` calls `$middleware->statefulApi()`, which adds
+  `Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful` to the `api` middleware group.
+- A request is treated as first-party (and receives the session + CSRF middleware stack) when its
+  `Referer` or `Origin` host matches `SANCTUM_STATEFUL_DOMAINS`.
+- Requests without those headers — e.g. the Android app's OkHttp/Retrofit calls — are **not** stateful
+  and keep authenticating with their bearer token. Token requests never receive a session cookie.
+- `GET /sanctum/csrf-cookie` starts the session and returns the `XSRF-TOKEN` cookie. The SPA must echo
+  that cookie's value in the `X-XSRF-TOKEN` header on every mutating request; missing or invalid token
+  results in `419`.
+- Session cookies are `httpOnly` with `sameSite=lax`. Set `SESSION_SECURE_COOKIE=true` in production.
+- CORS is configured in `config/cors.php` with `supports_credentials = true` and an explicit,
+  environment-provided origin list (never `*`, never hard-coded production hosts).
+
+### Admin auth endpoints
+| Method | Endpoint | Auth | Purpose |
+|---|---|---|---|
+| POST | `/api/v1/admin/auth/login` | none (admin-only, throttled) | Start an admin session from email + password. Returns the admin user; **never** an access token. |
+| POST | `/api/v1/admin/auth/logout` | `auth:sanctum` | End the session. A personal access token is revoked only if the request actually carried one. |
+| GET | `/api/v1/admin/auth/user` | `auth:sanctum` + `admin` | Return the authenticated administrator. |
+
+Behaviour:
+- Login success ⇒ `200 {"message":"Logged in successfully.","user":{…}}` plus a session cookie.
+- Wrong password **or** unknown email ⇒ `401 {"message":"Invalid credentials."}` — the same response for
+  both, so the endpoint does not disclose which email addresses exist.
+- A valid **non-admin** account ⇒ `403 {"message":"This account does not have administrator access."}` and
+  no usable session is left behind.
+- Too many attempts ⇒ `429` (default: 10 attempts per minute, per email + IP).
+- A first-party request from an origin that is not configured as stateful ⇒ `400`, because no session
+  could be established for a non-first-party caller.
+- `GET /api/v1/admin/auth/user` ⇒ `401` unauthenticated, `403` for a signed-in non-admin, `200` for an admin.
+
+### Admin authorization
+Reuses the existing role model (`User::ROLE_ADMIN` / `User::isAdmin()`) and the existing
+`AdminMiddleware`, now also registered as the `admin` route middleware alias. No second role system
+exists. The backend remains the only security boundary; any future SPA route guard is UX only.
+
+### Android authentication is unchanged
+`POST /api/v1/auth/register|login|logout` and `GET /api/v1/auth/user` still issue and consume Sanctum
+personal access tokens, and `GET /api/v1/catalog/medicines` is untouched. `AuthController::logout()`
+now revokes the token only when a real one exists — previously it called `currentAccessToken()->delete()`
+unconditionally, which fails for requests that have no personal access token.
+
+### Local development environment
+Add to `.env` (see `.env.example` for placeholders — never commit real values):
+```
+SANCTUM_STATEFUL_DOMAINS=localhost,localhost:5174,127.0.0.1,127.0.0.1:5174,localhost:8000,127.0.0.1:8000
+CORS_ALLOWED_ORIGINS=http://localhost:5174,http://127.0.0.1:5174
+```
+- Port `5174` is the planned Vite admin dev server. Use the same host consistently (`localhost` vs
+  `127.0.0.1`) or the browser will not send the session cookie.
+- Create an administrator with `php artisan make:admin`.
+
+### Security model (Admin Panel)
+1. Defence in depth: `auth:sanctum`, `AdminMiddleware` and each FormRequest's `authorize()` all verify admin rights.
+2. The SPA stores no credential in browser storage — the session lives in an `httpOnly` cookie, so XSS cannot lift a long-lived token.
+3. CSRF token required on every state-changing request; the session is regenerated on login and invalidated on logout (session-fixation and hijacking mitigation).
+4. Login is rate limited per email + IP; the remaining admin auth endpoints are rate limited as well.
+5. Cross-site requests are blocked twice over: `SameSite=lax` cookies are not attached to cross-site
+   POSTs, and such requests are not stateful, so they arrive unauthenticated.
+6. Admin API responses are JSON only, and catalog writes keep the existing FormRequest validation
+   (mime/size limits, generated filenames, SVG rejected).
+
+### Tests for Phase 2A
+`tests/Feature/AdminAuthenticationTest.php` covers the stateful configuration, admin login (success,
+non-admin rejection, invalid credentials, no email enumeration, validation, throttling), the auth/user
+endpoint (`401`/`403`/`200`), session cookie round-trips, logout safety (no personal access token
+deletion), Android bearer compatibility, and continued protection of the catalog API.
+Laravel skips CSRF validation while running unit tests, so the `419` behaviour is verified through the
+configuration plus a manual HTTP check rather than by PHPUnit.

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\RevokesCurrentAccessToken;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -9,6 +10,8 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    use RevokesCurrentAccessToken;
+
     public function register(Request $request)
     {
         $validated = $request->validate([
@@ -56,7 +59,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        // Token clients (Android) revoke their personal access token here. The call is
+        // guarded so session-authenticated first-party requests cannot crash on a null
+        // or non-persisted (TransientToken) current access token.
+        $this->revokeCurrentAccessToken($request);
 
         return response()->json([
             'message' => 'Logged out successfully.'

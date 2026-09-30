@@ -29,11 +29,15 @@ build output `public/build-admin`); `GET /admin/{any?}` shell route; login page;
 `RequireAdmin` guard; API client with CSRF bootstrap, `419` retry and typed errors; responsive
 sidebar/topbar shell with placeholder Dashboard/Catalog/Settings pages. 38 front-end tests, 80 PHP
 tests, production build, and real-Chrome browser verification (built bundle + Vite dev server).
-No catalog list/search/pagination, medicines forms, image upload UI or dashboard statistics yet.
-- **Phase 2C — Catalog list UI** (NEXT) — responsive table, search, filters, pagination, status toggle,
-delete confirmation, loading/empty/error states.
-- **Phase 2D — Catalog create/edit + images** — validated forms, image upload/replace/remove with
-client-side validation and previews.
+No medicines forms, image upload UI or dashboard statistics yet.
+- **Phase 2C — Catalog list UI** (COMPLETE) — `/admin/catalog` responsive table (desktop/tablet) +
+  mobile cards with server-side search (350ms debounce), Active/Inactive/All filter, pagination, status
+  toggle and delete with confirmation dialogs, loading/empty/error states (401→login, 403, 429
+  retry-after, 5xx retry, network), URL-driven `page/search/status` params, `features/catalog/*`.
+  55 front-end tests + typecheck + production build green; backend untouched (existing
+  `GET/PATCH/DELETE /api/v1/admin/catalog/medicines*` endpoints reused).
+- **Phase 2D — Catalog create/edit + images** (NEXT) — validated forms, image upload/replace/remove with
+  client-side validation and previews.
 - **Phase 2E — Dashboard + polish** — catalog statistics endpoint and cards, dark mode,
 accessibility pass, responsive QA.
 - **Phase 2F — Hardening + docs** — CI gates (PHPUnit, typecheck, admin build), production

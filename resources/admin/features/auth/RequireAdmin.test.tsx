@@ -51,13 +51,14 @@ describe('RequireAdmin', () => {
         expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
     })
 
-    it('renders the medicine catalog placeholder route', async () => {
+    it('renders the medicine catalog route inside the admin shell', async () => {
         mockAdminApi({ session: { status: 200, body: { user: adminUserFixture } } })
 
         renderAdminApp(['/admin/catalog'])
 
         expect(await screen.findByRole('heading', { name: 'Medicine Catalog' })).toBeInTheDocument()
-        expect(screen.getByText('Catalog management arrives in the next phase.')).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Add Medicine' })).toBeInTheDocument()
+        expect(screen.getByRole('navigation', { name: 'Admin sections' })).toBeInTheDocument()
     })
 
     it('signs out from the shell and returns to the login page', async () => {

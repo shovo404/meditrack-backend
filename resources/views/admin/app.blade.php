@@ -12,6 +12,25 @@
         <meta name="color-scheme" content="light dark">
         <title>MediTrack Admin</title>
 
+        {{--
+            Apply the saved theme before first paint so a dark-mode user never sees a flash
+            of the light theme. Mirrors `lib/theme/themeProvider.tsx`: storage key, 'system'
+            default, and OS-preference resolution. Storage exceptions (private mode) fall
+            back to the default preference.
+        --}}
+        <script>
+            (function () {
+                try {
+                    var stored = localStorage.getItem('meditrack-admin-theme');
+                    var mode = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+                    var dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    document.documentElement.classList.toggle('dark', dark);
+                } catch (e) {
+                    /* theme preference unavailable: stay with the default */
+                }
+            })();
+        </script>
+
         @if ($adminAssetsAreAvailable)
             {{--
                 React Fast Refresh preamble: only emitted while the admin Vite dev server is

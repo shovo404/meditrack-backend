@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import {
     createCatalogMedicine,
     deleteCatalogMedicine,
@@ -7,8 +7,21 @@ import {
     updateCatalogMedicineStatus,
 } from '../api/catalogApi'
 import type { CatalogMedicineDraft } from '../types'
+import { dashboardStatsQueryKey } from '@/features/dashboard/hooks/useDashboardStats'
 
 const catalogQueriesKey = ['admin', 'catalog'] as const
+
+/**
+ * Every catalog mutation can change what the dashboard shows: counts (create, delete,
+ * status) or the recently-updated ordering (update, image removal). Invalidating the tiny
+ * stats query alongside the catalog list keeps the dashboard truthful after any of them.
+ */
+function invalidateCatalogAndDashboard(queryClient: QueryClient) {
+    return () => {
+        void queryClient.invalidateQueries({ queryKey: catalogQueriesKey })
+        void queryClient.invalidateQueries({ queryKey: dashboardStatsQueryKey })
+    }
+}
 
 /**
  * `PATCH /admin/catalog/medicines/{id}/status`. Non-optimistic: the UI only reflects the
@@ -19,9 +32,7 @@ export function useCatalogStatusMutation() {
 
     return useMutation({
         mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) => updateCatalogMedicineStatus(id, isActive),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: catalogQueriesKey })
-        },
+        onSuccess: invalidateCatalogAndDashboard(queryClient),
     })
 }
 
@@ -31,9 +42,7 @@ export function useDeleteCatalogMutation() {
 
     return useMutation({
         mutationFn: (id: number) => deleteCatalogMedicine(id),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: catalogQueriesKey })
-        },
+        onSuccess: invalidateCatalogAndDashboard(queryClient),
     })
 }
 
@@ -44,9 +53,7 @@ export function useCreateCatalogMedicineMutation() {
     return useMutation({
         mutationFn: ({ draft, image }: { draft: CatalogMedicineDraft; image: File | null }) =>
             createCatalogMedicine(draft, image),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: catalogQueriesKey })
-        },
+        onSuccess: invalidateCatalogAndDashboard(queryClient),
     })
 }
 
@@ -57,9 +64,7 @@ export function useUpdateCatalogMedicineMutation() {
     return useMutation({
         mutationFn: ({ id, draft, image }: { id: number; draft: CatalogMedicineDraft; image: File | null }) =>
             updateCatalogMedicine(id, draft, image),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: catalogQueriesKey })
-        },
+        onSuccess: invalidateCatalogAndDashboard(queryClient),
     })
 }
 
@@ -69,8 +74,6 @@ export function useRemoveCatalogMedicineImageMutation() {
 
     return useMutation({
         mutationFn: (id: number) => removeCatalogMedicineImage(id),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: catalogQueriesKey })
-        },
+        onSuccess: invalidateCatalogAndDashboard(queryClient),
     })
 }

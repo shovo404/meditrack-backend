@@ -21,7 +21,7 @@ export function AdminNavLinks({ onNavigate, className }: AdminNavLinksProps) {
                             cn(
                                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                                 isActive
-                                    ? 'bg-brand-50 text-brand-800'
+                                    ? 'bg-brand-50 text-brand-800 dark:bg-brand-900/30 dark:text-brand-100'
                                     : 'text-muted hover:bg-surface-muted hover:text-ink'
                             )
                         }

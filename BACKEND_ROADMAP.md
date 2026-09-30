@@ -44,7 +44,15 @@ No medicines forms, image upload UI or dashboard statistics yet.
   500/network/submit error handling, responsive single-column mobile layout, row → Edit navigation.
   79 front-end tests + typecheck + production build green; backend unchanged (existing image store/
   remove endpoints verified end-to-end in real Chrome incl. the dedicated `remove_image` contract).
-- **Phase 2E — Dashboard + polish** — catalog statistics endpoint and cards, dark mode,
-accessibility pass, responsive QA.
+- **Phase 2E — Dashboard + polish** (COMPLETE) — real `/admin` dashboard backed by new
+  `GET /api/v1/admin/dashboard/stats` (total/active/inactive whole-catalog counts + top 5 recently
+  updated, soft-deletes excluded, tested incl. 403/401); three stat cards, quick actions
+  (Add Medicine / View Catalog), Recently-updated list, skeleton + per-status
+  error states (401→login, 403, 429 retry-after, 5xx, network); dashboard auto-invalidated on
+  every catalog mutation; dark mode (light/dark/system) with localStorage persistence,
+  FOUC guard, `color-scheme`, and a Topbar theme menu; dark-variant passes over alerts, inputs,
+  nav, dialogs, badges, image picker; responsive (390px) + accessibility (skip link, regions)
+  verified in real Chrome. 98 front-end tests + typecheck + production build green;
+  85 PHP tests green; Pint clean. Real-Chrome 23-item checklist all PASS.
 - **Phase 2F — Hardening + docs** — CI gates (PHPUnit, typecheck, admin build), production
 checklist, `ADMIN_PANEL_ARCHITECTURE.md`.

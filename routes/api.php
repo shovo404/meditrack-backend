@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminCatalogMedicineController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogMedicineController;
 use App\Http\Middleware\AdminMiddleware;
@@ -36,6 +37,8 @@ Route::prefix('v1')->group(function () {
                     'message' => 'Admin access verified',
                 ]);
             });
+
+            Route::get('/admin/dashboard/stats', [AdminDashboardController::class, 'stats']);
 
             Route::apiResource('admin/catalog/medicines', AdminCatalogMedicineController::class)
                 ->parameters(['medicines' => 'medicine']);

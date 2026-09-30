@@ -535,8 +535,19 @@ real-Chrome pass covering all 25 checklist items (incl. over-5 MB/SVG-style reje
 replace/remove cancel+confirm, unsaved-changes Stay/Leave, mobile 390px, server 422 contract).
 
 **Phase 2E — Dashboard + polish.**
-Statistics endpoint + dashboard cards, dark mode, a11y pass (keyboard + axe), responsive QA, skeletons/perceived-performance tuning.
-*Gate:* statistics authz tests; a11y checklist signed off.
+✅ DONE — Real `/admin` dashboard driven by one new `GET /api/v1/admin/dashboard/stats`
+(`AdminDashboardController`, inside the existing AdminMiddleware group): total/active/inactive
+whole-catalog counts + top-5 recently updated; three `StatCard`s, quick actions (Add Medicine / View
+Catalog), Recently-updated list reusing catalog UI atoms; skeleton grid + per-status scoped error
+states (401 clears session → login, 403, 429 retry-after, 5xx, network); dashboard query auto-invalidated
+on every catalog mutation. Dark mode (light/dark/system) via `ThemeProvider` (localStorage
+`meditrack-admin-theme`, system default, matchMedia listener, FOUC inline guard in `app.blade.php`,
+`color-scheme` in `admin.css`), Topbar theme menu, dark variants across alerts/inputs/fields/nav/
+auth pages/dialogs/status badges/row actions/image picker (brand-900 fallbacks — no brand-950 token).
+*Gate:* 98 admin tests (dashboard 12 + theme 7 new) + typecheck + production build, 85 PHP tests
+(5 new stats tests, 25 assertions), Pint clean, and a real-Chrome 23-item checklist — real stats
+54/36/18, create→55 then delete→54 invalidation, theme persistence over a dark OS, 390px mobile
+drawer + no overflow, no user-data endpoints, no console errors — all PASS.
 
 **Phase 2F — Documentation + hardening.**
 `ADMIN_PANEL_ARCHITECTURE.md`, README/roadmap/env updates, full `php artisan test` + `vitest run` + `build:admin` in CI, production checklist (secure cookies, CORS allow-list, debug off, `storage` PHP-deny, `/admin/test` gating).

@@ -69,7 +69,7 @@ describe('LoginPage', () => {
 
         await fillAndSubmit('  admin@example.com  ', 'secret-password')
 
-        expect(await screen.findByRole('heading', { name: 'Admin Dashboard' })).toBeInTheDocument()
+        expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
 
         const loginCall = callsTo(fetchMock, '/admin/auth/login')[0]
 
@@ -192,7 +192,7 @@ describe('LoginPage', () => {
 
         renderAdminApp(['/admin/login'])
 
-        expect(await screen.findByRole('heading', { name: 'Admin Dashboard' })).toBeInTheDocument()
+        expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
         expect(screen.queryByLabelText('Email address')).not.toBeInTheDocument()
     })
 })

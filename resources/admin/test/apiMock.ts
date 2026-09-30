@@ -8,6 +8,8 @@ export interface AdminApiMockOptions {
     login?: MockResponseSpec | ((init: RequestInit) => MockResponseSpec)
     /** `POST /api/v1/admin/auth/logout` (defaults to 200). */
     logout?: MockResponseSpec
+    /** `GET /api/v1/admin/dashboard/stats` (defaults to a small healthy dashboard). */
+    stats?: MockResponseSpec
 }
 
 /**
@@ -18,6 +20,10 @@ export function mockAdminApi(options: AdminApiMockOptions = {}): FetchMock {
     const session: MockResponseSpec = options.session ?? { status: 401, body: { message: 'Unauthenticated.' } }
     const login = options.login ?? { status: 200, body: { message: 'Logged in successfully.', user: adminUserFixture } }
     const logout: MockResponseSpec = options.logout ?? { status: 200, body: { message: 'Logged out successfully.' } }
+    const stats: MockResponseSpec = options.stats ?? {
+        status: 200,
+        body: { totalMedicines: 54, activeMedicines: 36, inactiveMedicines: 18, recentlyUpdated: [] },
+    }
 
     return installFetchMock((input, init) => {
         const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
@@ -36,6 +42,10 @@ export function mockAdminApi(options: AdminApiMockOptions = {}): FetchMock {
 
         if (url.includes('/admin/auth/logout')) {
             return mockResponse(logout)
+        }
+
+        if (url.includes('/admin/dashboard/stats')) {
+            return mockResponse(stats)
         }
 
         return mockResponse({ status: 404, body: { message: `Unexpected request: ${url}` } })

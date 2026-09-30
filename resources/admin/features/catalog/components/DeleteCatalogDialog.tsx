@@ -34,7 +34,7 @@ export function DeleteCatalogDialog({ medicine, open, onClose, onConfirm, isSubm
             </Button>
             <Button
                 variant="secondary"
-                className="border-red-300 text-red-700 hover:bg-red-50"
+                className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800/70 dark:text-red-400 dark:hover:bg-red-950/50"
                 onClick={onConfirm}
                 isLoading={isSubmitting}
             >

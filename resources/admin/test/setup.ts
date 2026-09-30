@@ -19,6 +19,36 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 // replace it with a deterministic stub.
 globalThis.URL.createObjectURL = () => 'blob:mediatrack-preview'
 
+// jsdom does not implement `matchMedia` (used by the theme's `system` mode). Provide a
+// no-op stub that reports the light scheme; theme tests stub `window.matchMedia`
+// themselves to control the effective preference.
+if (typeof window.matchMedia !== 'function') {
+    window.matchMedia = (query: string) => {
+        const listeners = new Set<() => void>()
+
+        return {
+            media: query,
+            get matches() {
+                return false
+            },
+            onchange: null,
+            addEventListener: (type: string, listener: () => void) => {
+                if (type === 'change') {
+                    listeners.add(listener)
+                }
+            },
+            removeEventListener: (type: string, listener: () => void) => {
+                if (type === 'change') {
+                    listeners.delete(listener)
+                }
+            },
+            addListener: (listener: () => void) => listeners.add(listener),
+            removeListener: (listener: () => void) => listeners.delete(listener),
+            dispatchEvent: () => false,
+        } as unknown as MediaQueryList
+    }
+}
+
 afterEach(() => {
     cleanup()
 

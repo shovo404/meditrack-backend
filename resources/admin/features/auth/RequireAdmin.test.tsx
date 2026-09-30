@@ -41,7 +41,7 @@ describe('RequireAdmin', () => {
 
         renderAdminApp(['/admin'])
 
-        expect(await screen.findByRole('heading', { name: 'Admin Dashboard' })).toBeInTheDocument()
+        expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
         expect(screen.getByRole('navigation', { name: 'Admin sections' })).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Medicine Catalog' })).toBeInTheDocument()
@@ -67,7 +67,7 @@ describe('RequireAdmin', () => {
 
         renderAdminApp(['/admin'])
 
-        await screen.findByRole('heading', { name: 'Admin Dashboard' })
+        await screen.findByRole('heading', { name: 'Dashboard' })
         await user.click(screen.getByRole('button', { name: /sign out/i }))
 
         expect(await screen.findByRole('heading', { name: 'Sign in to the admin panel' })).toBeInTheDocument()

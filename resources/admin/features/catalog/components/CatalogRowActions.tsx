@@ -79,7 +79,7 @@ export function CatalogRowActions({ medicine, onEdit, onActivate, onDeactivate, 
                         <button
                             type="button"
                             onClick={() => onDelete(medicine)}
-                            className={focus ? 'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-700 bg-red-50' : 'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-700'}
+                            className={focus ? 'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-950/50' : 'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-700 dark:text-red-400'}
                         >
                             <Trash2 aria-hidden="true" className="h-4 w-4" />
                             Delete

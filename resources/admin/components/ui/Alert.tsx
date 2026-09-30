@@ -5,9 +5,20 @@ import { cn } from '@/lib/utils/cn'
 type Tone = 'error' | 'success' | 'info'
 
 const tones: Record<Tone, { wrapper: string; icon: string }> = {
-    error: { wrapper: 'border-red-200 bg-red-50 text-red-800', icon: 'text-red-600' },
-    success: { wrapper: 'border-emerald-200 bg-emerald-50 text-emerald-900', icon: 'text-emerald-600' },
-    info: { wrapper: 'border-brand-200 bg-brand-50 text-brand-900', icon: 'text-brand-700' },
+    error: {
+        wrapper: 'border-red-200 bg-red-50 text-red-800 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-100',
+        icon: 'text-red-600 dark:text-red-400',
+    },
+    success: {
+        wrapper:
+            'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-100',
+        icon: 'text-emerald-600 dark:text-emerald-400',
+    },
+    info: {
+        wrapper:
+            'border-brand-200 bg-brand-50 text-brand-900 dark:border-brand-900/70 dark:bg-brand-900/50 dark:text-brand-100',
+        icon: 'text-brand-700 dark:text-brand-300',
+    },
 }
 
 const icons = {

@@ -126,7 +126,7 @@ export function CatalogImagePicker({
                 onDrop={handleDrop}
                 className={cn(
                     'rounded-lg border border-dashed p-4 transition-colors',
-                    dragOver ? 'border-brand-500 bg-brand-50' : 'border-line',
+                    dragOver ? 'border-brand-500 bg-brand-50 dark:border-brand-500 dark:bg-brand-900/50' : 'border-line',
                     disabled && 'opacity-60'
                 )}
             >
@@ -206,7 +206,7 @@ export function CatalogImagePicker({
             <p className="text-xs text-muted">JPG, PNG or WEBP, up to 5 MB. Drag and drop also works.</p>
 
             {error ? (
-                <p role="alert" className="text-xs font-medium text-red-600">
+                <p role="alert" className="text-xs font-medium text-red-600 dark:text-red-400">
                     {error}
                 </p>
             ) : null}

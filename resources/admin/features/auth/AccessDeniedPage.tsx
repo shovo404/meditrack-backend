@@ -28,7 +28,7 @@ export function AccessDeniedPage() {
         <main className="flex min-h-screen items-center justify-center bg-canvas px-4 py-12">
             <div className="w-full max-w-lg rounded-card border border-line bg-surface p-8 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400">
                         <ShieldAlert aria-hidden="true" className="h-5 w-5" />
                     </span>
                     <h1 className="text-lg font-semibold text-ink">Administrator access required</h1>

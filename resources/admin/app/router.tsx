@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-do
 import { AdminShell } from '@/components/layout/AdminShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RequireAdmin } from '@/features/auth/RequireAdmin'
+import { CatalogMedicineFormPage } from '@/features/catalog/CatalogMedicineFormPage'
 import { CatalogPage } from '@/features/catalog/CatalogPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { NotFoundPage } from '@/features/misc/NotFoundPage'
@@ -25,6 +26,8 @@ export const adminRoutes: RouteObject[] = [
                 children: [
                     { path: '/admin', element: <DashboardPage /> },
                     { path: '/admin/catalog', element: <CatalogPage /> },
+                    { path: '/admin/catalog/new', element: <CatalogMedicineFormPage /> },
+                    { path: '/admin/catalog/:medicineId/edit', element: <CatalogMedicineFormPage /> },
                     { path: '/admin/settings', element: <SettingsPage /> },
                     { path: '/admin/*', element: <NotFoundPage /> },
                 ],

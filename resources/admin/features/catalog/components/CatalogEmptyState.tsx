@@ -20,7 +20,7 @@ export function CatalogEmptyState({ isFiltered, onReset }: CatalogEmptyStateProp
             <p className="max-w-md text-sm text-muted">
                 {isFiltered
                     ? 'Try a different search term or status, or clear your filters to see the full catalog.'
-                    : 'The catalog is empty. New medicines can be added once the Add Medicine form ships in the next phase.'}
+                    : 'The catalog is empty. Use Add Medicine to create the first entry.'}
             </p>
             {isFiltered ? (
                 <Button variant="secondary" onClick={onReset}>

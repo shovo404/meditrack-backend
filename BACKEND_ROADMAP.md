@@ -36,8 +36,14 @@ No medicines forms, image upload UI or dashboard statistics yet.
   retry-after, 5xx retry, network), URL-driven `page/search/status` params, `features/catalog/*`.
   55 front-end tests + typecheck + production build green; backend untouched (existing
   `GET/PATCH/DELETE /api/v1/admin/catalog/medicines*` endpoints reused).
-- **Phase 2D — Catalog create/edit + images** (NEXT) — validated forms, image upload/replace/remove with
-  client-side validation and previews.
+- **Phase 2D — Catalog create/edit + images** (COMPLETE) — `/admin/catalog/new` and
+  `/admin/catalog/:medicineId/edit` validated forms (zod, server-mirrored rules), multipart
+  `POST`/`PUT` via FormData, image upload with cross-field client validation (JPG/PNG/WEBP, 5 MB),
+  drag-and-drop + browse picker, live previews, replace-on-save, dedicated remove-image flow
+  (`PATCH …/{id}/image` with confirmation dialog), unsaved-changes guard (`useBlocker`), 401/403/429/
+  500/network/submit error handling, responsive single-column mobile layout, row → Edit navigation.
+  79 front-end tests + typecheck + production build green; backend unchanged (existing image store/
+  remove endpoints verified end-to-end in real Chrome incl. the dedicated `remove_image` contract).
 - **Phase 2E — Dashboard + polish** — catalog statistics endpoint and cards, dark mode,
 accessibility pass, responsive QA.
 - **Phase 2F — Hardening + docs** — CI gates (PHPUnit, typecheck, admin build), production

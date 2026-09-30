@@ -1,19 +1,20 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { ChevronDown, Power, Trash2 } from 'lucide-react'
+import { ChevronDown, Pencil, Power, Trash2 } from 'lucide-react'
 import type { CatalogMedicine } from '../types'
 
 export interface CatalogRowActionsProps {
     medicine: CatalogMedicine
+    onEdit: (medicine: CatalogMedicine) => void
     onActivate: (medicine: CatalogMedicine) => void
     onDeactivate: (medicine: CatalogMedicine) => void
     onDelete: (medicine: CatalogMedicine) => void
 }
 
 /**
- * Per-row "Actions" menu (keyboard accessible via Headless UI's Menu). Edit/Image-replace
- * actions are intentionally absent — they belong to Phase 2D.
+ * Per-row "Actions" menu (keyboard accessible via Headless UI's Menu). Edit opens the
+ * Phase 2D form; activate/deactivate/delete keep the Phase 2C behaviour.
  */
-export function CatalogRowActions({ medicine, onActivate, onDeactivate, onDelete }: CatalogRowActionsProps) {
+export function CatalogRowActions({ medicine, onEdit, onActivate, onDeactivate, onDelete }: CatalogRowActionsProps) {
     return (
         <Menu as="div" className="relative">
             <MenuButton
@@ -28,6 +29,21 @@ export function CatalogRowActions({ medicine, onActivate, onDeactivate, onDelete
                 anchor="bottom end"
                 className="z-30 min-w-44 rounded-lg border border-line bg-surface p-1 shadow-lg"
             >
+                <MenuItem>
+                    {({ focus }) => (
+                        <button
+                            type="button"
+                            onClick={() => onEdit(medicine)}
+                            className={focus ? 'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm bg-surface-muted text-ink' : 'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-ink'}
+                        >
+                            <Pencil aria-hidden="true" className="h-4 w-4" />
+                            Edit
+                        </button>
+                    )}
+                </MenuItem>
+
+                <div className="my-1 h-px bg-line" role="separator" />
+
                 {medicine.isActive ? (
                     <MenuItem>
                         {({ focus }) => (

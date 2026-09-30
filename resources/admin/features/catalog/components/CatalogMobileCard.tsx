@@ -7,13 +7,14 @@ import type { CatalogMedicine } from '../types'
 
 export interface CatalogMobileCardProps {
     medicine: CatalogMedicine
+    onEdit: (medicine: CatalogMedicine) => void
     onActivate: (medicine: CatalogMedicine) => void
     onDeactivate: (medicine: CatalogMedicine) => void
     onDelete: (medicine: CatalogMedicine) => void
 }
 
 /** Mobile catalog card (`md:hidden` in the page) — the wide table is never forced onto small screens. */
-export function CatalogMobileCard({ medicine, onActivate, onDeactivate, onDelete }: CatalogMobileCardProps) {
+export function CatalogMobileCard({ medicine, onEdit, onActivate, onDeactivate, onDelete }: CatalogMobileCardProps) {
     return (
         <Card>
             <CardBody className="space-y-3">
@@ -40,6 +41,7 @@ export function CatalogMobileCard({ medicine, onActivate, onDeactivate, onDelete
                 <div className="flex justify-end border-t border-line pt-3">
                     <CatalogRowActions
                         medicine={medicine}
+                        onEdit={onEdit}
                         onActivate={onActivate}
                         onDeactivate={onDeactivate}
                         onDelete={onDelete}

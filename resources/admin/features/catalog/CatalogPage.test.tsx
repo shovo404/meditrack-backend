@@ -70,6 +70,7 @@ function pagedServer(rows: CatalogMedicine[]) {
 interface CatalogBackendOptions {
     session?: MockResponseSpec
     list?: (url: string) => Promise<Response> | Response
+    detail?: (id: number) => Response
     patchStatus?: (id: number, body: { is_active: boolean }) => Response
     destroy?: (id: number) => Response
 }
@@ -92,6 +93,7 @@ function mockCatalogBackend(options: CatalogBackendOptions) {
         if (url.includes('/admin/catalog/medicines')) {
             const statusMatch = url.match(/admin\/catalog\/medicines\/(\d+)\/status$/)
             const deleteMatch = url.match(/admin\/catalog\/medicines\/(\d+)$/)
+            const detailMatch = url.match(/admin\/catalog\/medicines\/(\d+)$/)
 
             if (method === 'PATCH' && statusMatch) {
                 const body = init?.body ? (JSON.parse(String(init.body)) as { is_active: boolean }) : { is_active: false }
@@ -105,6 +107,12 @@ function mockCatalogBackend(options: CatalogBackendOptions) {
             if (method === 'DELETE' && deleteMatch) {
                 return (options.destroy ?? (() => mockResponse({ status: 200, body: { message: 'ok' } })))(
                     Number.parseInt(deleteMatch[1], 10)
+                )
+            }
+
+            if (method === 'GET' && detailMatch) {
+                return (options.detail ?? (() => mockResponse({ status: 200, body: { data: medicine(Number.parseInt(detailMatch[1], 10)) } })))(
+                    Number.parseInt(detailMatch[1], 10)
                 )
             }
 
@@ -433,7 +441,7 @@ describe('CatalogPage', () => {
         expect(callsTo(mock, '/admin/catalog/medicines/1')).toHaveLength(1)
     })
 
-    it('announces that the Add Medicine form ships in the next phase', async () => {
+    it('navigates to the Add Medicine form', async () => {
         mockCatalogBackend({ list: pagedServer([medicine(1)]) })
 
         renderAdminApp(['/admin/catalog'])
@@ -441,6 +449,22 @@ describe('CatalogPage', () => {
 
         await userEvent.click(screen.getByRole('button', { name: 'Add Medicine' }))
 
-        expect(screen.getByText('Add Medicine arrives in the next phase.')).toBeInTheDocument()
+        expect(await screen.findByRole('heading', { name: 'Add Medicine' })).toBeInTheDocument()
+    })
+
+    it('offers Edit in the row actions and opens the edit form', async () => {
+        mockCatalogBackend({
+            list: pagedServer([medicine(7)]),
+            detail: () => mockResponse({ status: 200, body: { data: medicine(7) } }),
+        })
+
+        renderAdminApp(['/admin/catalog'])
+        await screen.findByRole('table')
+
+        await userEvent.click(screen.getAllByRole('button', { name: 'Actions for Medicine 7' })[0])
+        await userEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }))
+
+        expect(await screen.findByRole('heading', { name: 'Edit Medicine' })).toBeInTheDocument()
+        expect(await screen.findByLabelText('Medicine Name *')).toHaveValue('Medicine 7')
     })
 })

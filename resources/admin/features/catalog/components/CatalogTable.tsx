@@ -6,16 +6,14 @@ import type { CatalogMedicine } from '../types'
 
 export interface CatalogTableProps {
     medicines: CatalogMedicine[]
+    onEdit: (medicine: CatalogMedicine) => void
     onActivate: (medicine: CatalogMedicine) => void
     onDeactivate: (medicine: CatalogMedicine) => void
     onDelete: (medicine: CatalogMedicine) => void
 }
 
-/**
- * Desktop/tablet catalog table (`hidden md:block` in the page). Columns match the
- * Phase 2C scope: edit and image-replace actions are not offered yet.
- */
-export function CatalogTable({ medicines, onActivate, onDeactivate, onDelete }: CatalogTableProps) {
+/** Desktop/tablet catalog table (`hidden md:block` in the page). */
+export function CatalogTable({ medicines, onEdit, onActivate, onDeactivate, onDelete }: CatalogTableProps) {
     return (
         <table className="w-full border-collapse text-left text-sm">
             <caption className="sr-only">Global medicine catalog</caption>
@@ -69,6 +67,7 @@ export function CatalogTable({ medicines, onActivate, onDeactivate, onDelete }: 
                         <td className="px-4 py-3 text-right">
                             <CatalogRowActions
                                 medicine={medicine}
+                                onEdit={onEdit}
                                 onActivate={onActivate}
                                 onDeactivate={onDeactivate}
                                 onDelete={onDelete}

@@ -14,6 +14,11 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
     globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
 }
 
+// The image picker previews chosen files via URL.createObjectURL. jsdom has no
+// implementation and vitest's bundled one crashes on jsdom File objects, so always
+// replace it with a deterministic stub.
+globalThis.URL.createObjectURL = () => 'blob:mediatrack-preview'
+
 afterEach(() => {
     cleanup()
 

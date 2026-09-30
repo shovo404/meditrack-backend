@@ -526,8 +526,13 @@ Table/card list, debounced search, status filter, pagination (URL-driven), loadi
 *Gate:* RTL+MSW tests for list/search/pagination/empty/error; manual pass at 3 breakpoints.
 
 **Phase 2D — Catalog create/edit + images.**
-Form pages, zod validation, 422 mapping, image picker/preview/replace/remove, `_method=PUT` multipart flow, toasts, dirty-state guard.
-*Gate:* tests for image validation + multipart request shape; manual create/edit/replace/remove/over-5 MB/SVG-rejection pass.
+✅ DONE — Form pages (`/admin/catalog/new`, `/admin/catalog/:medicineId/edit`), zod validation mirroring
+the server rules, 422 field mapping, image picker (browse + drag-and-drop, JPG/PNG/WEBP, 5 MB) with
+live previews, replace-on-save, dedicated remove-image dialogue (`PATCH …/{id}/image`), dirty-state
+guard via `useBlocker`, 401/403/429/500/network/submit error handling, mobile single-column layout.
+*Gate:* 23 form tests + updated list tests (79 admin tests total), typecheck, production build, and a
+real-Chrome pass covering all 25 checklist items (incl. over-5 MB/SVG-style rejection, image
+replace/remove cancel+confirm, unsaved-changes Stay/Leave, mobile 390px, server 422 contract).
 
 **Phase 2E — Dashboard + polish.**
 Statistics endpoint + dashboard cards, dark mode, a11y pass (keyboard + axe), responsive QA, skeletons/perceived-performance tuning.

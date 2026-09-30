@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
@@ -41,6 +41,7 @@ function parseStatus(raw: string | null): CatalogStatusFilter {
  */
 export function CatalogPage() {
     const queryClient = useQueryClient()
+    const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
 
     const pageRaw = Number.parseInt(searchParams.get('page') ?? '1', 10)
@@ -218,6 +219,7 @@ export function CatalogPage() {
                         onActivate={(medicine) => setStatusTarget({ medicine, targetActive: true })}
                         onDeactivate={(medicine) => setStatusTarget({ medicine, targetActive: false })}
                         onDelete={(medicine) => setDeleteTarget(medicine)}
+                        onEdit={(medicine) => navigate(`/admin/catalog/${medicine.id}/edit`)}
                     />
                 </div>
 
@@ -229,6 +231,7 @@ export function CatalogPage() {
                             onActivate={(item) => setStatusTarget({ medicine: item, targetActive: true })}
                             onDeactivate={(item) => setStatusTarget({ medicine: item, targetActive: false })}
                             onDelete={(item) => setDeleteTarget(item)}
+                            onEdit={(item) => navigate(`/admin/catalog/${item.id}/edit`)}
                         />
                     ))}
                 </div>
@@ -244,7 +247,7 @@ export function CatalogPage() {
                 title="Medicine Catalog"
                 description="The global medicine catalog that MediTrack clients synchronise from. Admin actions only affect catalog data — never user medicine records."
                 actions={
-                    <Button onClick={() => setNotice({ tone: 'info', text: 'Add Medicine arrives in the next phase.' })}>
+                    <Button onClick={() => navigate('/admin/catalog/new')}>
                         <Plus aria-hidden="true" className="h-4 w-4" />
                         Add Medicine
                     </Button>

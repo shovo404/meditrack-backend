@@ -34,3 +34,16 @@ export interface CatalogListParams {
     status: CatalogStatusFilter
     perPage: number
 }
+
+/**
+ * Editable shape of a catalog medicine, mirroring the Laravel `StoreCatalogMedicine` /
+ * `UpdateCatalogMedicine` rules. The image is managed separately (see the form page).
+ */
+export interface CatalogMedicineDraft {
+    name: string
+    genericName: string
+    strength: string
+    dosageForm: string
+    manufacturer: string
+    isActive: boolean
+}

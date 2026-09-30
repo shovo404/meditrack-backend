@@ -54,5 +54,5 @@ No medicines forms, image upload UI or dashboard statistics yet.
   nav, dialogs, badges, image picker; responsive (390px) + accessibility (skip link, regions)
   verified in real Chrome. 98 front-end tests + typecheck + production build green;
   85 PHP tests green; Pint clean. Real-Chrome 23-item checklist all PASS.
-- **Phase 2F — Hardening + docs** — CI gates (PHPUnit, typecheck, admin build), production
+- **Phase 2F — Hardening + docs** (COMPLETE) — CI gates (PHPUnit, typecheck, admin build), production
 checklist, `ADMIN_PANEL_ARCHITECTURE.md`.

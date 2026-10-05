@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DoseLog extends Model
 {
@@ -50,12 +51,12 @@ class DoseLog extends Model
         return $query->where('user_id', $userId);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function medicine()
+    public function medicine(): BelongsTo
     {
         return $this->belongsTo(Medicine::class);
     }

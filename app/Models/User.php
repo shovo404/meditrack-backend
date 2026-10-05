@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -40,17 +41,17 @@ class User extends Authenticatable
         return $this->role === self::ROLE_ADMIN;
     }
 
-    public function medicines()
+    public function medicines(): HasMany
     {
         return $this->hasMany(Medicine::class);
     }
 
-    public function prescriptions()
+    public function prescriptions(): HasMany
     {
         return $this->hasMany(Prescription::class);
     }
 
-    public function doseLogs()
+    public function doseLogs(): HasMany
     {
         return $this->hasMany(DoseLog::class);
     }

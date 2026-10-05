@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogMedicineController;
 use App\Http\Controllers\DoseLogController;
 use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserMedicineController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/user', [AuthController::class, 'user']);
+
+        // Profile. Updates only the authenticated user; no identifier is taken from input.
+        Route::put('/profile', [ProfileController::class, 'update']);
 
         Route::get('/catalog/medicines', [CatalogMedicineController::class, 'index']);
 

@@ -15,6 +15,7 @@ class Medicine extends Model
     protected $guarded = [];
 
     protected $casts = [
+        'catalog_medicine_id' => 'integer',
         'dosage_amount' => 'float',
         'is_active' => 'boolean',
         'start_date' => 'date:Y-m-d',

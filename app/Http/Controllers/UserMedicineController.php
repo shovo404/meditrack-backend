@@ -18,11 +18,21 @@ class UserMedicineController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    /**
+     * Shared validation rules for the create and update medicine payloads.
+     *
+     * `catalogMedicineId` is validated as an integer because the canonical
+     * catalogue identifier is `catalog_medicines.id`, an auto-increment column.
+     * An `integer` rule also accepts the numeric string a JSON/Gson client
+     * naturally produces, so no client-side casting is required.
+     *
+     * @return array<string, mixed>
+     */
+    private function medicineRules(): array
     {
-        $validated = $request->validate([
+        return [
             'id' => 'required|uuid',
-            'catalogMedicineId' => 'nullable|uuid|exists:catalog_medicines,id',
+            'catalogMedicineId' => 'nullable|integer|exists:catalog_medicines,id',
             'name' => 'required|string|max:255',
             'genericName' => 'required|string|max:255',
             'type' => 'required|string|max:100',
@@ -43,7 +53,12 @@ class UserMedicineController extends Controller
             'schedules.*.dosageAmount' => 'required|numeric',
             'schedules.*.dosageUnit' => 'required|string|max:100',
             'schedules.*.isActive' => 'required|boolean',
-        ]);
+        ];
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate($this->medicineRules());
 
         $medicine = null;
         DB::transaction(function () use ($validated, $request, &$medicine) {
@@ -142,6 +157,13 @@ class UserMedicineController extends Controller
             'startDate' => $medicine->start_date ? $medicine->start_date->format('Y-m-d') : null,
             'endDate' => $medicine->end_date ? $medicine->end_date->format('Y-m-d') : null,
             'isActive' => $medicine->is_active,
+            // Reconciliation contract. The Android client compares these against
+            // its local `updatedAt` to decide whether a server row is newer, so
+            // omitting them silently disables server -> device reconciliation.
+            // `toIso8601String()` matches PrescriptionResource, CatalogMedicineResource
+            // and DoseLogResource, and carries an explicit UTC offset.
+            'createdAt' => $medicine->created_at?->toIso8601String(),
+            'updatedAt' => $medicine->updated_at?->toIso8601String(),
             'schedules' => $medicine->schedules->map(function ($sch) {
                 return [
                     'id' => $sch->id,

@@ -26,6 +26,16 @@ class AppServiceProvider extends ServiceProvider
     private const ADMIN_AUTH_MAX_ATTEMPTS_PER_MINUTE = 120;
 
     /**
+     * Password reset requests allowed per minute, per email + IP pair.
+     *
+     * Deliberately lower than `admin-login` because this endpoint triggers an
+     * outbound notification. Without a tight bound, one client could be used to
+     * flood a third party's inbox, and to probe which addresses are registered by
+     * watching delivery side effects.
+     */
+    private const PASSWORD_RESET_MAX_ATTEMPTS_PER_MINUTE = 3;
+
+    /**
      * Register any application services.
      */
     public function register(): void
@@ -58,6 +68,17 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(self::ADMIN_AUTH_MAX_ATTEMPTS_PER_MINUTE)
                 ->by($request->user()?->getAuthIdentifier() ?: $request->ip())
                 ->response($this->throttleResponse('Too many requests. Please slow down.'));
+        });
+
+        // Password reset requests. Keyed by email + IP so that one client cannot
+        // flood a single victim's inbox, and so a single account cannot be reset
+        // repeatedly from a rotating set of clients.
+        RateLimiter::for('password-reset', function (Request $request) {
+            return Limit::perMinute(self::PASSWORD_RESET_MAX_ATTEMPTS_PER_MINUTE)
+                ->by(Str::transliterate(
+                    Str::lower((string) $request->input('email')).'|'.$request->ip()
+                ))
+                ->response($this->throttleResponse('Too many password reset requests. Please try again shortly.'));
         });
     }
 

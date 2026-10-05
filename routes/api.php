@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
+    // Unauthenticated by design. Deliberately not inside the auth:sanctum group:
+    // a signed-in user still needs to be able to recover the account.
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:password-reset');
 
     Route::post('/admin/auth/login', [AdminAuthController::class, 'login'])
         ->middleware('throttle:admin-login');

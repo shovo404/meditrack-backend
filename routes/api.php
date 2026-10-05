@@ -5,6 +5,9 @@ use App\Http\Controllers\AdminCatalogMedicineController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogMedicineController;
+use App\Http\Controllers\DoseLogController;
+use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\UserMedicineController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -12,8 +15,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
 
-    // Admin Panel authentication (first-party SPA: session cookie + CSRF, never a token).
-    // Login is public but administrator-only and rate limited; the rest require a session.
     Route::post('/admin/auth/login', [AdminAuthController::class, 'login'])
         ->middleware('throttle:admin-login');
 
@@ -26,16 +27,19 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/user', [AuthController::class, 'user']);
 
-        // User Catalog API
         Route::get('/catalog/medicines', [CatalogMedicineController::class, 'index']);
 
-        // Admin API
+        // User Medicine API
+        Route::apiResource('medicines', UserMedicineController::class);
+        Route::apiResource('prescriptions', PrescriptionController::class);
+
+        // User DoseLog (medication history) API
+        Route::post('dose_logs/bulk', [DoseLogController::class, 'bulk']);
+        Route::apiResource('dose_logs', DoseLogController::class);
+
         Route::middleware(AdminMiddleware::class)->group(function () {
             Route::get('/admin/test', function () {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Admin access verified',
-                ]);
+                return response()->json(['success' => true, 'message' => 'Admin access verified']);
             });
 
             Route::get('/admin/dashboard/stats', [AdminDashboardController::class, 'stats']);

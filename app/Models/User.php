@@ -12,6 +12,7 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     public const ROLE_USER = 'USER';
+
     public const ROLE_ADMIN = 'ADMIN';
 
     protected $fillable = [
@@ -33,9 +34,24 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    
+
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function medicines()
+    {
+        return $this->hasMany(Medicine::class);
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class);
+    }
+
+    public function doseLogs()
+    {
+        return $this->hasMany(DoseLog::class);
     }
 }

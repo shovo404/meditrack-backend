@@ -8,6 +8,9 @@ const ADMIN_ROOT = 'resources/admin'
 export default defineConfig({
     root: ADMIN_ROOT,
     base: '/',
+    define: {
+        'import.meta.env.VITE_IS_STANDALONE': JSON.stringify(true),
+    },
     plugins: [
         react(),
         tailwindcss(),

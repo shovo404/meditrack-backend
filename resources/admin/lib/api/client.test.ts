@@ -181,6 +181,16 @@ describe('apiFetch', () => {
         expect(await apiFetch('/admin/auth/user')).toBeUndefined()
     })
 
+    it('throws an ApiError when the server returns HTML instead of JSON (e.g. Netlify fallback)', async () => {
+        installFetchMock(apiHandler({ status: 200, raw: '<html>SPA Fallback</html>' }))
+
+        const error = (await apiFetch('/admin/auth/user').catch((e: unknown) => e)) as ApiError
+
+        expect(error).toBeInstanceOf(ApiError)
+        expect(error.status).toBe(500)
+        expect(error.message).toBe('Received an invalid (non-JSON) response from the server.')
+    })
+
     it('resolves relative paths against the configured API base path', async () => {
         const fetchMock = installFetchMock(() => mockResponse({ body: {} }))
 

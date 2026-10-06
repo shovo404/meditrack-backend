@@ -55,7 +55,14 @@ export class ApiError extends Error {
 export const API_BASE_URL = (import.meta.env.VITE_ADMIN_API_BASE_URL ?? '/api/v1').replace(/\/+$/, '')
 
 /** Sanctum's session bootstrap endpoint. Deliberately outside the API prefix. */
-export const CSRF_COOKIE_URL = '/sanctum/csrf-cookie'
+export const CSRF_COOKIE_URL = (() => {
+    try {
+        const url = new URL(API_BASE_URL)
+        return `${url.origin}/sanctum/csrf-cookie`
+    } catch {
+        return '/sanctum/csrf-cookie'
+    }
+})()
 
 export const CSRF_COOKIE_NAME = 'XSRF-TOKEN'
 export const CSRF_HEADER_NAME = 'X-XSRF-TOKEN'
@@ -186,6 +193,12 @@ async function toApiError(response: Response): Promise<ApiError> {
  * - A single automatic retry after a 419 (stale token), then a typed ApiError.
  */
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}, retryOnCsrfMismatch = true): Promise<T> {
+    // In standalone Netlify deployments, the API URL MUST be provided.
+    // If it falls back to a relative path, the SPA will accidentally query itself.
+    if (import.meta.env.VITE_IS_STANDALONE && !import.meta.env.VITE_ADMIN_API_BASE_URL) {
+        throw new ApiError(500, 'Configuration Error: VITE_ADMIN_API_BASE_URL is missing. Please configure the backend API URL.')
+    }
+
     const method = options.method ?? 'GET'
     const mutating = !['GET', 'HEAD', 'OPTIONS'].includes(method)
     const body = options.body
@@ -257,5 +270,9 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}, r
         return undefined as T
     }
 
-    return JSON.parse(text) as T
+    try {
+        return JSON.parse(text) as T
+    } catch {
+        throw new ApiError(500, 'Received an invalid (non-JSON) response from the server.')
+    }
 }

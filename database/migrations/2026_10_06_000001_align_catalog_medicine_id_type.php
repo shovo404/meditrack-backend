@@ -36,11 +36,16 @@ return new class extends Migration
 
         $this->detachUnresolvableCatalogLinks();
 
-        Schema::table('medicines', function (Blueprint $table) {
-            $table->unsignedBigInteger('catalog_medicine_id')
-                ->nullable()
-                ->change();
-        });
+                if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE medicines DROP COLUMN catalog_medicine_id');
+            DB::statement('ALTER TABLE medicines ADD COLUMN catalog_medicine_id bigint NULL');
+        } else {
+            Schema::table('medicines', function (Blueprint $table) {
+                $table->unsignedBigInteger('catalog_medicine_id')
+                    ->nullable()
+                    ->change();
+            });
+        }
 
         Schema::table('medicines', function (Blueprint $table) {
             $table->foreign('catalog_medicine_id')

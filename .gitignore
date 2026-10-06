@@ -27,3 +27,15 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+.env.*
+database/*.sqlite
+database/*.sqlite.bak
+database/*.sql
+*.py
+*.md
+.agents/
+.claude/
+opencode.json
+boost.json
+.mcp.json

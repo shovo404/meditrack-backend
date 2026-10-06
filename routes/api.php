@@ -53,7 +53,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/admin/dashboard/stats', [AdminDashboardController::class, 'stats']);
 
             Route::apiResource('admin/catalog/medicines', AdminCatalogMedicineController::class)
-                ->parameters(['medicines' => 'medicine']);
+                ->parameters(['medicines' => 'medicine'])->names('admin.catalog.medicines');
             Route::patch('admin/catalog/medicines/{medicine}/status', [AdminCatalogMedicineController::class, 'status']);
             Route::patch('admin/catalog/medicines/{medicine}/image', [AdminCatalogMedicineController::class, 'removeImage']);
         });

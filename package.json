@@ -5,6 +5,7 @@
     "scripts": {
         "build": "vite build",
         "build:admin": "vite build --config vite.admin.config.js",
+        "build:netlify": "vite build --config vite.netlify.config.js",
         "dev": "vite",
         "dev:admin": "vite --config vite.admin.config.js",
         "test:admin": "vitest run --config vite.admin.config.js",

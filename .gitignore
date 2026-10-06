@@ -39,3 +39,4 @@ database/*.sql
 opencode.json
 boost.json
 .mcp.json
+/dist-admin-netlify/
